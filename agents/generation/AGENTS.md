@@ -33,7 +33,12 @@ Before any reasoning:
 2. Read that markdown file carefully.
 3. Set `problem_id` to the provided explicit problem id if the prompt includes one; otherwise set it to the problem filepath relative to `data/`, without the trailing `.md`.
 4. If the prompt provides `reference_dir` and that directory exists, read supported reference files inside it before external search.
-5. Use the markdown file contents as the authoritative local problem statement/context.
+5. If `data/logs/` or `data/results/` exists, search both directories for previous artifacts relevant to the current statement, concepts, techniques, references, or failure modes, and read the most relevant text artifacts before starting a new proof attempt. Relevance is semantic and does not require the previous artifact to have the same problem name or `problem_id`.
+6. Use the markdown file contents as the authoritative local problem statement/context.
+
+Treat previous logs as reusable but unverified context. A previous result under `data/results/` may be used without copying its statement or proof into the new final document, provided the agent reads it, checks that it establishes the needed claim in the current setting, and cites its workspace-relative path plus an exact section, theorem, or other unambiguous locator. Persist any prior artifact that influences the current attempt in `memory/{problem_id}/` with its source path and locator.
+
+Previous logs and results are optional starting points, not constraints. If a prior method is inefficient, repeatedly unsuccessful, or poorly suited to the current problem, abandon it and pursue a materially different strategy while retaining only useful verified results by citation.
 
 Do not flatten category directories out of `problem_id`. A problem in `data/algebra/modrep.md` must use `algebra/modrep`, not `modrep`.
 
@@ -139,7 +144,8 @@ After invoking any skill:
    - arXiv id if applicable
    - theorem id if available
 6. Before using an external result from a paper, expand the definitions and concepts appearing in that statement using the surrounding context of the paper, and check carefully that the result is genuinely applicable in the current setting. Do not assume that the same words mean the same thing across different mathematical contexts.
-7. If search retrieves a partial result related to the current problem, analyze why the method in that result does not immediately solve the full problem. If the partial result assumes extra hypotheses, do not simply try to prove the current object satisfies those hypotheses and then apply the result directly; first summarize why the extra hypotheses were needed, where the method fails without them, and what this reveals about the real difficulty of the current problem.
+7. If a proof step uses a previous result under `data/results/`, record its workspace-relative path, exact locator, and the claim being imported. The previous result need not be rewritten in the current proof.
+8. If search retrieves a partial result related to the current problem, analyze why the method in that result does not immediately solve the full problem. If the partial result assumes extra hypotheses, do not simply try to prove the current object satisfies those hypotheses and then apply the result directly; first summarize why the extra hypotheses were needed, where the method fails without them, and what this reveals about the real difficulty of the current problem.
 
 
 ### Verification repair loop
@@ -180,6 +186,7 @@ Stop only when the blueprint passes verification and the verified markdown proof
 13. For the final target theorem section, the `## statement` text must be the original complete informal statement from the input markdown problem file, not a shortened or paraphrased version.
 14. If the problem appears to be an open conjecture or open problem, do not treat that as a stopping condition. Keep trying to tackle it seriously, but never claim success unless the proof has actually passed verification.
 15. Extensive search is not enough by itself. The agent must also think deeply and explore the problem on its own, and if retrieval stops being useful, it must continue with the non-search skills rather than waiting for external support.
+16. A final proof may cite a checked result under `data/results/` instead of reproducing that result's statement or proof. This exception does not apply to exploratory logs, and it does not waive verification of the cited result's content or applicability.
 
 
 
@@ -227,3 +234,11 @@ If `## proof` cites an external result, include in the proof text:
 - `paper_id`
 - `theorem_id`
 - `arXiv id` when applicable
+
+If `## proof` uses a previous local result, cite it in this canonical form:
+
+```text
+[prior-result: data/results/<relative-file>; locator: <section, theorem label, or other exact locator>]
+```
+
+State the consequence being imported in the surrounding proof sentence, but do not repeat the cited result's full statement or proof. Only `data/results/` artifacts may discharge a proof obligation this way; `data/logs/` may be cited as provenance but remains unverified.

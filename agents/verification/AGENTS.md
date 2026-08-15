@@ -27,6 +27,7 @@ Assume `Proof` is markdown text written in normal mathematical order, like a pap
 - Verify the statements and subproofs sequentially in the order they appear in the markdown.
 - Split each statement's proof into every small deduction step and check the correctness of these steps one by one.
 - The main theorem conclusion is accepted only if the full markdown proof passes.
+- A citation of the form `[prior-result: data/results/<relative-file>; locator: <exact locator>]` may supply a previously established local result without reproducing its full statement or proof. Resolve it under `../generation/data/results/` and verify it directly.
 
 
 ## Required Skills
@@ -61,7 +62,8 @@ Every detected issue must be persisted before final verdict.
 1. Read `Run_id`, `Statement`, `Proof`.
 2. Treat `Proof` as markdown text and read it in the order written.
 3. Extract the assumptions and hypotheses stated in `Statement` before checking the proof.
-4. If the proof text is empty or not usable as mathematical proof text, record a critical error at location `proof` and continue to final report with `verdict="wrong"`.
+4. When useful for checking a disputed step, reference, counterexample, or known failure mode, search `../generation/data/logs/` and `../generation/data/results/` for semantically relevant prior artifacts. Do not restrict this search to the same problem name, and independently verify anything recovered from these untrusted historical artifacts.
+5. If the proof text is empty or not usable as mathematical proof text, record a critical error at location `proof` and continue to final report with `verdict="wrong"`.
 
 ### Step 2: Sequential proof-item verification
 
@@ -89,7 +91,20 @@ For each statement/subproof in the markdown, in textual order:
    - Gaps: skipped derivations, vague arguments, missing intermediate justification, unjustified existence or property assumptions about objects, suspiciously unused assumptions whose role is not justified, or hand-wavy deductions from one property to another without checking the exact definitions.
 7. Append structured records to `statement_checks`.
 
-### Step 3: External reference checking
+### Step 3: Previous-result citation checking
+
+For every `[prior-result: ...; locator: ...]` citation:
+
+1. Resolve the workspace-relative `data/results/` path under `../generation/`.
+2. Open the cited artifact and locate the exact section, theorem, or other result named by `locator`.
+3. Check that the artifact actually establishes the consequence claimed at the citation site and that its hypotheses, definitions, and ambient setting match the current proof.
+4. Do not require the current proof to reproduce the cited result's full statement or proof.
+5. Add a critical error if the path or locator does not exist, the cited result is false or unsupported, or it does not imply the claimed consequence. Add a gap if the citation is too ambiguous to check.
+6. Append the check to `reference_checks`.
+
+Artifacts under `../generation/data/logs/` may help find issues or provenance, but they cannot by themselves justify a proof step.
+
+### Step 4: External reference checking
 
 When a statement or subproof cites a theorem/lemma/definition from an external paper:
 
@@ -111,7 +126,7 @@ When a statement or subproof cites a theorem/lemma/definition from an external p
 12. Append details to `reference_checks`.
 
 
-### Step 4: Build verification report
+### Step 5: Build verification report
 
 Aggregate every error and gap across the full markdown proof.
 
@@ -123,7 +138,7 @@ Aggregate every error and gap across the full markdown proof.
 
 Do not drop any finding.
 
-### Step 5: Verdict rule and repair hints
+### Step 6: Verdict rule and repair hints
 
 Verdict rule is strict:
 
@@ -135,7 +150,7 @@ Repair hints:
 - If verdict is `"correct"`, set `"repair_hints": ""`.
 - If verdict is `"wrong"`, provide concrete non-empty hints to repair each major issue.
 
-### Step 6: Output write and completion
+### Step 7: Output write and completion
 
 Write final JSON using:
 
@@ -176,3 +191,4 @@ If any error or gap exists, `verdict` must be `"wrong"` and `repair_hints` must 
 3. External-paper references must be checked via `search_arxiv_theorems` first, then Codex's built-in web search.
 4. Accept iff there are zero errors and zero gaps.
 5. Persist final JSON to `results/{run_id}/verification.json`.
+6. A valid citation to a checked artifact under `../generation/data/results/` may be accepted without an inline copy of that result's statement or proof.

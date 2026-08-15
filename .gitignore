@@ -39,6 +39,21 @@ agents/verification/logs/
 agents/verification/memory/
 agents/verification/results/
 
+# My own files
+data/
+
+# References
+*.png
+*.pdf
+*.txt
+
+# Unknown files
+*.600pk
+agents/generation/.local-py/
+agents/generation/scratch/
+agents/generation/scripts/
+agents/generation/tmp/
+
 # Zola build output and downloaded theme are ignored by agents/generation/site/.gitignore too.
 agents/generation/site/public/
 agents/generation/site/themes/

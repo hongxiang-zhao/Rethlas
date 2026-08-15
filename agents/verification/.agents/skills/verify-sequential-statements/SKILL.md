@@ -29,6 +29,7 @@ Do not split the proof with utility code. Read the markdown in order and use its
    - Are assumptions stated and sufficient?
    - Is each theorem application valid in context?
    - Are there skipped or hand-wavy steps?
+   - If the inference uses a well-formed `[prior-result: ...; locator: ...]` citation, defer validation of the cited content to `$check-referenced-statements`; do not require the prior statement or proof to be repeated inline.
    - Do similar-looking definitions actually match exactly?
    - Do similar-looking formulas in those definitions differ in a way that matters for the argument?
    - If the proof deduces one property from another, do the exact definitions and defining formulas of those two properties really support that deduction?
